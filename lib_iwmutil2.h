@@ -1,12 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 #define   LIB_IWMUTIL_COPYLIGHT         "(C)2008-2024 iwm-iwama"
-#define   LIB_IWMUTIL_VERSION           "lib_iwmutil2_20240212"
+#define   LIB_IWMUTIL_VERSION           "lib_iwmutil2_20240228"
 //////////////////////////////////////////////////////////////////////////////////////////
-#include <conio.h>
-#include <ctype.h>
-#include <float.h>
-#include <limits.h>
-#include <locale.h>
 #include <math.h>
 #include <shlwapi.h>
 #include <signal.h>
@@ -71,8 +66,8 @@ UINT64    iExecSec(CONST UINT64 microSec);
 	メモリ確保
 ----------------------------------------------------------------------------------------*/
 //////////////////////////////////////////////////////////////////////////////////////////
-VOID      *icalloc(UINT64 n,UINT64 size,BOOL aryOn);
-VOID      *irealloc(VOID *ptr,UINT64 n,UINT64 size);
+VOID      *icalloc(UINT64 n,UINT64 sizeOf,BOOL aryOn);
+VOID      *irealloc(VOID *ptr,UINT64 n,UINT64 sizeOf);
 
 // MS 文字列
 #define   icalloc_MS(n)                 (MS*)icalloc(n,sizeof(MS),FALSE)
@@ -100,11 +95,20 @@ VOID      icalloc_free(VOID *ptr);
 VOID      icalloc_freeAll();
 VOID      icalloc_mapSweep();
 
-#define   ifree(ptr)          icalloc_free(ptr);icalloc_mapSweep();
+#define   ifree(ptr)          icalloc_free(ptr)
 #define   ifree_all()         icalloc_freeAll()
 
-VOID      icalloc_mapPrint1();
-#define   icalloc_mapPrint()  PL();NL();icalloc_mapPrint1()
+//////////////////////////////////////////////////////////////////////////////////////////
+/*----------------------------------------------------------------------------------------
+	Debug
+----------------------------------------------------------------------------------------*/
+//////////////////////////////////////////////////////////////////////////////////////////
+VOID      idebug_printMap();
+#define   idebug_map()        PL();NL();idebug_printMap()
+
+VOID      idebug_printPointer(VOID *ptr,INT sizeOf);
+#define   idebug_pointerM(ptr)          PL();idebug_printPointer(ptr,sizeof(MS));NL()
+#define   idebug_pointerW(ptr)          PL();idebug_printPointer(ptr,sizeof(WS));NL()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /*----------------------------------------------------------------------------------------
@@ -163,27 +167,25 @@ UINT64    iun_len(MS *str);
 
 UINT      imn_Codepage(MS *str);
 
-UINT64    ivn_cpy(VOID *to,VOID *from,INT sizeOfChar);
-#define   imn_cpy(to,from)              (UINT64)ivn_cpy(to,from,sizeof(MS))
-#define   iwn_cpy(to,from)              (UINT64)ivn_cpy(to,from,sizeof(WS))
+UINT64    imn_cpy(MS *to,MS *from);
+UINT64    iwn_cpy(WS *to,WS *from);
 
-UINT64    ivn_pcpy(VOID *to,VOID *from1,VOID *from2,INT sizeOfChar);
+UINT64    ivn_pcpy(VOID *to,VOID *from1,VOID *from2,INT sizeOf);
 #define   imn_pcpy(to,from1,from2)      (UINT64)ivn_pcpy(to,from1,from2,sizeof(MS))
 #define   iwn_pcpy(to,from1,from2)      (UINT64)ivn_pcpy(to,from1,from2,sizeof(WS))
 
-VOID      *ivs_clone(VOID *from,INT sizeOfChar);
-#define   ims_clone(from)               (MS*)ivs_clone(from,sizeof(MS))
-#define   iws_clone(from)               (WS*)ivs_clone(from,sizeof(WS))
+MS        *ims_clone(MS *from);
+WS        *iws_clone(WS *from);
 
-VOID      *ivs_pclone(VOID *from1,VOID *from2,INT sizeOfChar);
+VOID      *ivs_pclone(VOID *from1,VOID *from2,INT sizeOf);
 #define   ims_pclone(from1,from2)       (MS*)ivs_pclone(from1,from2,sizeof(MS))
 #define   iws_pclone(from1,from2)       (WS*)ivs_pclone(from1,from2,sizeof(WS))
 
 MS        *ims_cats(UINT size,...);
 WS        *iws_cats(UINT size,...);
 
-MS        *ims_sprintf(MS *format,...);
-WS        *iws_sprintf(WS *format,...);
+MS        *ims_printf(MS *format,...);
+WS        *iws_printf(WS *format,...);
 
 BOOL      iwb_cmp(WS *str,WS *search,BOOL perfect,BOOL icase);
 #define   iwb_cmpf(str,search)          (BOOL)iwb_cmp(str,search,FALSE,FALSE)
@@ -236,7 +238,9 @@ WS        **iwaa_uniq(WS **ary,BOOL icase);
 WS        **iwaa_getDirFile(WS **ary,INT iType);
 WS        **iwaa_higherDir(WS **ary);
 
+VOID      imav_print(MS **ary);
 VOID      iwav_print(WS **ary);
+
 VOID      iwav_print2(WS **ary,WS *sLeft,WS *sRight);
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -254,10 +258,10 @@ $struct_iVBStr,
 $struct_iVBM,
 $struct_iVBW;
 
-$struct_iVBStr      *iVBStr_alloc(UINT64 startSize,INT sizeOfChar);
-VOID      iVBStr_add($struct_iVBStr *IBS,VOID *str,UINT64 strLen,INT sizeOfChar);
-VOID      iVBM_sprintf($struct_iVBM *IVBM,MS *format,...);
-VOID      iVBW_sprintf($struct_iVBW *IVBW,WS *format,...);
+$struct_iVBStr      *iVBStr_alloc(UINT64 startSize,INT sizeOf);
+VOID      iVBStr_add($struct_iVBStr *IBS,VOID *str,UINT64 strLen,INT sizeOf);
+VOID      iVBM_add_printf($struct_iVBM *IVBM,MS *format,...);
+VOID      iVBW_add_printf($struct_iVBW *IVBW,WS *format,...);
 
 // MS
 #define   iVBM_alloc()                  iVBStr_alloc(256,sizeof(MS))
@@ -374,10 +378,10 @@ WS        *iCLI_GetStdin();
 
 	◆各暦の変数
 		※CJDを基準に計算。
-		JD  : Julian Day               :-4712-01-01 12:00:00開始
-		CJD : Chronological Julian Day :-4712-01-01 00:00:00開始 :JD-0.5
-		MJD : Modified Julian Day      : 1858-11-17 00:00:00開始 :JD-2400000.5
-		LD  : Lilian Day               : 1582-10-15 00:00:00開始 :JD-2299159.5
+		JD   Julian Day                -4712-01-01 12:00:00開始
+		CJD  Chronological Julian Day  -4712-01-01 00:00:00開始 = (JD - 0.5)
+		MJD  Modified Julian Day        1858-11-17 00:00:00開始 = (JD - 2400000.5)
+		LD   Lilian Day                 1582-10-15 00:00:00開始 = (JD - 2299159.5)
 */
 #define   CJD_START           L"-4712-01-01 00:00:00"
 #define   JD_START            L"-4712-01-01 12:00:00"
@@ -390,18 +394,18 @@ WS        *iCLI_GetStdin();
 	CJD暦(=JD暦-0.5)の最終日 NS_before[]
 	NS暦 (=GD暦)    の開始日 NS_after[]
 
-	JD暦は本来、BC.4713-1-1 12:00を起点とするが、
-	計算上、00:00を起点(=CJD暦)として扱う.
+	JD暦は本来、BC.4713-1-1 "12:00" を起点とするが、
+	計算上、"00:00" を起点(=CJD暦)として扱う.
 	<cf> idate_jdToCjd(JD)
 
 	起点は国によって違う
 	<ITALY>
-		CJD:2299160	YMD:1582-10-04
-		CJD:2299161	YMD:1582-10-15
+		CJD:2299160／YMD:1582-10-04
+		CJD:2299161／YMD:1582-10-15
 
 	<ENGLAND>
-		CJD:2361221	YMD:1752-09-02
-		CJD:2361222	YMD:1752-09-14
+		CJD:2361221／YMD:1752-09-02
+		CJD:2361222／YMD:1752-09-14
 */
 
 // 本来UINT/UINT64でよいが、保険のためINT/INT64を使用
@@ -419,14 +423,14 @@ typedef struct
 $struct_idate_value,
 $struct_iDV;
 
-#define   iDV_alloc()                   icalloc(1,sizeof($struct_iDV),FALSE);IDV->sign=TRUE
+#define   iDV_alloc()                             icalloc(1,sizeof($struct_iDV),FALSE);IDV->sign=TRUE
 #define   iDV_set(IDV,i_y,i_m,i_d,i_h,i_n,i_s)    idate_cjdToYmdhns(IDV,idate_ymdhnsToCjd(i_y,i_m,i_d,i_h,i_n,i_s))
-#define   iDV_set2(IDV,cjd)             idate_cjdToYmdhns(IDV,cjd)
-#define   iDV_getCJD(IDV)               (INT64)idate_ymdhnsToCjd(IDV->y,IDV->m,IDV->d,IDV->h,IDV->n,IDV->s)
+#define   iDV_set2(IDV,cjd)                       idate_cjdToYmdhns(IDV,cjd)
+#define   iDV_getCJD(IDV)                         (INT64)idate_ymdhnsToCjd(IDV->y,IDV->m,IDV->d,IDV->h,IDV->n,IDV->s)
 #define   iDV_add(IDV,i_y,i_m,i_d,i_h,i_n,i_s)    iDV_set(IDV,(IDV->y+i_y),(IDV->m+i_m),(IDV->d+i_d),(IDV->h+i_h),(IDV->n+i_n),(IDV->s+i_s))
-#define   iDV_add2(IDV,cjd)             idate_cjdToYmdhns(IDV,cjd+iDV_getCJD(IDV))
-#define   iDV_clear(IDV)                IDV->sign=TRUE;IDV->y=0;IDV->m=0;IDV->d=0;IDV->h=0;IDV->n=0;IDV->s=0;IDV->days=0.0
-#define   iDV_free(IDV)                 ifree(IDV)
+#define   iDV_add2(IDV,cjd)                       idate_cjdToYmdhns(IDV,cjd+iDV_getCJD(IDV))
+#define   iDV_clear(IDV)                          IDV->sign=TRUE;IDV->y=0;IDV->m=0;IDV->d=0;IDV->h=0;IDV->n=0;IDV->s=0;IDV->days=0.0
+#define   iDV_free(IDV)                           ifree(IDV)
 
 BOOL      idate_chk_ymdhnsW(WS *str);
 

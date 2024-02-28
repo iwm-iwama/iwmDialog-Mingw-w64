@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 #define   IWM_COPYRIGHT       "(C)2024 iwm-iwama"
-#define   IWM_VERSION         "iwmFileDialog_20240212"
+#define   IWM_VERSION         "iwmFileDialog_20240226"
 //------------------------------------------------------------------------------
 #include "lib_iwmutil2.h"
 
@@ -70,8 +70,6 @@ main()
 			L"$dialog = New-Object System.Windows.Forms.OpenFileDialog;" \
 			L"$dialog.Multiselect = %S;" \
 			L"$dialog.InitialDirectory = '%S';" \
-			L"<# 出力 CP65001 #>;" \
-			L"[Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(65001);" \
 			L"if($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::ok){" \
 			L"  $dialog.FileNames;" \
 			L"}else{" \
@@ -117,7 +115,7 @@ main()
 		}
 
 		// WS を MS に変換
-		MS *mpFiles = W2M(wpFiles);
+		MS *mpFiles = icnv_W2M(wpFiles, GetACP());
 		MS *mpEnd = mpFiles;
 		ifree(wpFiles);
 
@@ -199,7 +197,7 @@ main()
 
 	Sleep(1000);
 
-	///icalloc_mapPrint(); ifree_all(); icalloc_mapPrint();
+	///idebug_map(); ifree_all(); idebug_map();
 
 	// 最終処理
 	imain_end();

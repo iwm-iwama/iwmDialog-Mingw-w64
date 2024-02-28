@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 #define   IWM_COPYRIGHT       "(C)2024 iwm-iwama"
-#define   IWM_VERSION         "iwmDirDialog_20240213"
+#define   IWM_VERSION         "iwmDirDialog_20240226"
 //------------------------------------------------------------------------------
 #include "lib_iwmutil2.h"
 
@@ -81,8 +81,6 @@ main()
 		L"$dialog = New-Object System.Windows.Forms.FolderBrowserDialog;" \
 		L"$dialog.SelectedPath = '%S';" \
 		L"$showdialog = $dialog.ShowDialog();" \
-		L"<# 出力 CP65001 #>;" \
-		L"[Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(65001);" \
 		L"if($showdialog -eq [System.Windows.Forms.DialogResult]::ok){" \
 		L"  Write-Host ($dialog.SelectedPath.TrimEnd('\\') + '\\');" \
 		L"}else{" \
@@ -90,13 +88,13 @@ main()
 		L"};" \
 		L"\"";
 
-	wp1 = iws_sprintf(script, GblInitialDir);
+	wp1 = iws_printf(script, GblInitialDir);
 		imv_system(wp1, TRUE);
 	ifree(wp1);
 
 	Sleep(1000);
 
-	///icalloc_mapPrint(); ifree_all(); icalloc_mapPrint();
+	///idebug_map(); ifree_all(); idebug_map();
 
 	// 最終処理
 	imain_end();

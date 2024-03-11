@@ -35,7 +35,7 @@ set op_link=-Os -Wall -Wextra -lgdi32 -luser32 -lshlwapi -lcomdlg32
 	cls
 
 	%fn_exe% -h
-	for /f "usebackq delims=" %%s in (`%fn_exe% -d=c:\windows`) do echo %%s
+	for /f "usebackq delims=" %%s in (`"%fn_exe% -d=c:\windows -cp=932"`) do echo %%s
 
 :: Quit
 	echo.

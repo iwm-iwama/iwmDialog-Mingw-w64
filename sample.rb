@@ -5,14 +5,14 @@ LN = "-" * 80
 
 def SubPrint(cmd)
 	while true
-		s1 = %x(#{cmd} -d=c:\\windows)
+		s1 = %x(#{cmd} -cp=65001)
 		break if s1.length == 0
-		print s1.force_encoding("cp932")
+		print s1
 	end
 end
 
 puts LN
 SubPrint("iwmDirDialog.exe")
 puts LN
-SubPrint("iwmFileDialog.exe -l")
+SubPrint("iwmFileDialog.exe")
 puts LN

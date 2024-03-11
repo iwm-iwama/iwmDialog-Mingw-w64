@@ -7,7 +7,7 @@ echo %LN%
 
 :R10
 	set rtn=
-	for /f "usebackq delims=" %%s in (`"iwmDirDialog.exe"`) do (
+	for /f "usebackq delims=" %%s in (`"iwmDirDialog.exe -cp=932"`) do (
 		set rtn=%%s
 		echo %%s
 	)
@@ -19,7 +19,7 @@ echo %LN%
 
 :R20
 	set rtn=
-	for /f "usebackq delims=" %%s in (`"iwmFileDialog.exe -l"`) do (
+	for /f "usebackq delims=" %%s in (`"iwmFileDialog.exe -cp=932"`) do (
 		set rtn=%%s
 		echo %%s
 	)
@@ -29,5 +29,5 @@ echo %LN%
 
 echo %LN%
 
-::pause
+sleep 2
 exit

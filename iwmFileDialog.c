@@ -1,12 +1,15 @@
 //------------------------------------------------------------------------------
 #define   IWM_COPYRIGHT       "(C)2024 iwm-iwama"
-#define   IWM_VERSION         "iwmFileDialog_20240309"
+#define   IWM_VERSION         "iwmFileDialog_20240428"
 //------------------------------------------------------------------------------
 #include "lib_iwmutil2.h"
 
 INT       main();
 VOID      print_version();
 VOID      print_help();
+
+#define   PWSH                "pwsh.exe"
+#define   PWSHW               L"" PWSH ""
 
 #define   POWERSHELL          "powershell.exe"
 #define   POWERSHELLW         L"" POWERSHELL ""
@@ -31,31 +34,59 @@ main()
 		imain_end();
 	}
 
+	WS *pwshW = NULL;
+	INT pwshFlg = 0; // 0=なし／1=powershell.exe／2=pwsh.exe
+
 	MS *mp1 = 0;
 	WS *wp1 = 0;
 
 	// 'PowerShell' Installed ?
-	mp1 = ims_popenW(L"where " POWERSHELLW);
+	mp1 = ims_popenW(L"where " PWSHW);
 		wp1 = M2W(mp1);
-			if(! *iwp_searchPos(wp1, POWERSHELLW, TRUE))
+			if(*iwp_searchPos(wp1, PWSHW, TRUE))
 			{
-				P1(
-					"\033[0m"
-					"\033[91m"
-					"[Err] "
-					"\033[37m"
-					"このプログラムの実行には"
-					"\033[93m"
-					" Windows PowerShell (" POWERSHELL ") "
-					"\033[37m"
-					"が必要です。"
-					"\033[0m"
-					"\n\n"
-				);
-				imain_end();
+				pwshFlg = 2;
+				pwshW = PWSHW;
 			}
 		ifree(wp1);
 	ifree(mp1);
+
+	if(pwshFlg < 2)
+	{
+		mp1 = ims_popenW(L"where " POWERSHELLW);
+			wp1 = M2W(mp1);
+				if(*iwp_searchPos(wp1, POWERSHELLW, TRUE))
+				{
+					pwshFlg = 1;
+					pwshW = POWERSHELLW;
+				}
+			ifree(wp1);
+		ifree(mp1);
+	}
+
+	if(pwshFlg < 1)
+	{
+		// バッチファイル(CP932)で文字化けするのでSTDERRに出力
+		fputs(
+			"\033[0m"
+			"\033[91m"
+			"[Err] "
+			"\033[37m"
+			"このプログラムの実行には"
+			"\033[93m"
+			" PowerShell ("
+			PWSH
+			"／"
+			POWERSHELL
+			") "
+			"\033[37m"
+			"が必要です。"
+			"\033[0m"
+			"\n\n"
+			, stderr
+		);
+		imain_end();
+	}
 
 	WS GblInitialDir[MAX_PATH] = L".";
 	UINT GblCodepage = 65001;
@@ -91,15 +122,14 @@ main()
 
 	// インライン・スクリプト
 	WS *script = (
-		POWERSHELLW
-		L" -command \""
+		L"%S -command \""
 		L"[void][System.Reflection.Assembly]::LoadWithPartialName('system.windows.forms');"
-		L"<# 日本語メニュー CP932 #>;"
+		// 日本語メニュー CP932
 		L"[Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(932);"
 		L"$dialog = New-Object System.Windows.Forms.OpenFileDialog;"
 		L"$dialog.Multiselect = %d;"
 		L"$dialog.InitialDirectory = '%S';"
-		L"<# 出力CP指定 #>;"
+		// 出力 CP指定
 		L"[Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(%d);"
 		L"if($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::ok){"
 		L"  $dialog.FileNames;"
@@ -109,7 +139,7 @@ main()
 		L"\""
 	);
 
-	wp1 = iws_sprintf(script, GblMultiSelect, GblInitialDir, GblCodepage);
+	wp1 = iws_sprintf(script, pwshW, GblMultiSelect, GblInitialDir, GblCodepage);
 		imv_systemW(wp1);
 	ifree(wp1);
 

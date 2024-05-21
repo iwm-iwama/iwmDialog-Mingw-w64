@@ -1048,6 +1048,7 @@ iun_len(
 //-----------
 // Codepage
 //-----------
+// v2023-12-14
 UINT
 imn_Codepage(
 	MS *str
@@ -2883,56 +2884,87 @@ iConsole_EscOn()
 	consoleMode = (consoleMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 	SetConsoleMode($StdoutHandle, consoleMode);
 }
-//---------------------
-// STDIN から直接読込
-//---------------------
-/* (例)
-	// 手入力のとき
-	//   [Enter] [Ctrl]+[Z] [Enter] で入力終了
+//-----------------
+// STDIN から読込
+//-----------------
+/* 例
+	P2("何か入力してください。\n[Ctrl]+[D]＋[Enter] で終了");
 	WS *wp1 = iCLI_GetStdin();
-		P("\033[93m" "[wcslen = %d]" "\033[0m\n", wcslen(wp1));
-		P1("\033[92m");
-		P1W(wp1);
-		P1("\033[0m\n\n");
+		P2W(wp1);
+		P("\n> %lld 文字（'\\n'含む）\n", wcslen(wp1));
 	ifree(wp1);
 */
-// v2024-01-20
+// v2024-05-21
 WS
 *iCLI_GetStdin()
 {
-	INT mp1Size = 256;
-	INT mp1End = 0;
-	MS *mp1 = icalloc_MS(mp1Size);
-
-	// 手入力のとき
-	//   [Enter] [Ctrl]+[Z] [Enter] で入力終了
-	INT c = 0;
-	while((c = getchar()) != EOF)
-	{
-		mp1[mp1End] = (MS)c;
-		++mp1End;
-		if(mp1End >= mp1Size)
-		{
-			mp1Size <<= 1;
-			mp1 = irealloc_MS(mp1, mp1Size);
-		}
-	}
-
-	// 末尾の特殊文字を消去してから'\n'付与
-	//   -1=EOF／10='\n'／32=' '
-	for(--mp1End; mp1End >= 0 && mp1[mp1End] <= 32; mp1End--)
-	{
-		mp1[mp1End] = 0;
-	}
-	mp1[mp1End + 1] = '\n';
-
-	///PL3(imn_Codepage(mp1));
-	WS *rtn = icnv_M2W(mp1, imn_Codepage(mp1));
-	ifree(mp1);
-
-	// リセット
+	// 再設定／外部アプリから設定変更されることがあるため
 	iConsole_EscOn();
 	SetConsoleOutputCP(65001);
+
+	WS *rtn = 0;
+
+	INPUT_RECORD PCI_record;
+	DWORD PCI_events;
+	BOOL PCI_flg = PeekConsoleInput(
+		GetStdHandle(STD_INPUT_HANDLE),
+		&PCI_record,
+		1,
+		&PCI_events
+	);
+
+	// 手入力
+	if(PCI_flg)
+	{
+		$struct_iVBW *iVBW = iVBW_alloc();
+			CONST DWORD BufLen = 1;
+			WS *Buf = icalloc_WS(BufLen);
+				DWORD RCW_len;
+				while(TRUE)
+				{
+					ReadConsoleW(
+						GetStdHandle(STD_INPUT_HANDLE),
+						Buf,
+						BufLen,
+						&RCW_len,
+						NULL
+					);
+					// 終了時 [Ctrl]+[D] or [Ctrl]+[Z]
+					if(Buf[0] == 4 || Buf[0] == 26)
+					{
+						break;
+					}
+					iVBW_add(iVBW, Buf);
+				}
+			ifree(Buf);
+			rtn = iws_clone(iVBW_getStr(iVBW));
+		iVBW_free(iVBW);
+	}
+	// STDIN から読込
+	else
+	{
+		UINT mp1Size = 4096;
+		UINT mp1End = 0;
+		MS *mp1 = icalloc_MS(mp1Size);
+			INT c = 0;
+			while((c = getchar()) != EOF)
+			{
+				mp1[mp1End] = (MS)c;
+				++mp1End;
+				if(mp1End >= mp1Size)
+				{
+					mp1Size <<= 1;
+					mp1 = irealloc_MS(mp1, mp1Size);
+				}
+			}
+			rtn = icnv_M2W(mp1, imn_Codepage(mp1));
+		ifree(mp1);
+	}
+
+	// "\r\n" を "\n" に変換
+	WS *wp1 = rtn;
+		rtn = iws_replace(wp1, L"\r\n", L"\n", FALSE);
+	ifree(wp1);
 
 	return rtn;
 }

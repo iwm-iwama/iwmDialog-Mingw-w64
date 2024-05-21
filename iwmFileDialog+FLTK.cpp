@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 #define   IWM_COPYRIGHT       "(C)2024 iwm-iwama"
-#define   IWM_VERSION         "iwmDirFileDialog_20240502"
+#define   IWM_VERSION         "iwmFileDialog+FLTK_202405018"
 //------------------------------------------------------------------------------
 extern "C"
 {
@@ -206,7 +206,7 @@ print_version()
 VOID
 print_help()
 {
-	CONST MS *_cmd = "iwmDirFileDialog.exe";
+	CONST MS *_cmd = "iwmFileDialog+FLTK.exe";
 
 	print_version();
 	P(

@@ -20,6 +20,8 @@ main()
 	// lib_iwmutil2 初期化
 	imain_begin();
 
+	///iCLI_VarList();
+
 	// -h | --help
 	if(iCLI_getOptMatch(0, L"-h", L"--help"))
 	{

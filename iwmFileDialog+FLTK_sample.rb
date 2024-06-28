@@ -1,16 +1,17 @@
 #!ruby
 #coding:utf-8
 
+CMD = "iwmFileDialog+FLTK.exe"
 LN = "-" * 80
 
-def SubPrint(cmd)
+def SubDialog()
 	while true
-		s1 = %x(#{cmd} -type=mf -cp=65001)
+		s1 = %x(#{CMD} -type=mf -cp=65001)
 		break if s1.length == 0
 		print s1
 	end
 end
 
 puts LN
-SubPrint("iwmFileDialog+FLTK.exe")
+SubDialog()
 puts LN

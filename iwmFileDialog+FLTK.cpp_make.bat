@@ -12,7 +12,10 @@ set fn_exe=%fn%.exe
 set cc=g++.exe -std=c++23
 set lib=lib_iwmutil2.a
 :: -static 以降は bash $(fltk-config --ldstaticflags) を展開したもの
-set op_link=-Os -Wall -Wextra -lgdi32 -luser32 -lshlwapi -static -pipe -Wl,-subsystem,console -mwindows c:\msys64\mingw64\lib\libfltk.a -lole32 -luuid -lcomctl32 -lws2_32
+:: -Wl,-subsystem,console => With Console
+:: -Wl,-subsystem,windows => Without Console
+set subsystem=console
+set op_link=-Os -Wall -Wextra -lgdi32 -luser32 -lshlwapi -static -pipe -Wl,-subsystem,%subsystem% -mwindows c:\msys64\mingw64\lib\libfltk.a -lole32 -luuid -lcomctl32 -lws2_32
 
 :: Make
 	echo --- Make ------------------------------------------
@@ -23,7 +26,7 @@ set op_link=-Os -Wall -Wextra -lgdi32 -luser32 -lshlwapi -static -pipe -Wl,-subs
 :: Test
 	pause
 	%fn%.exe
-	for /f "usebackq delims=" %%s in (`"%fn_exe% -cp=932"`) do echo %%s
+	for /f "usebackq delims=" %%s in (`"%fn_exe% -type=mf -cp=932"`) do echo %%s
 
 :: Quit
 	echo.

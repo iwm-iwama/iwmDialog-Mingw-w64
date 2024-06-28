@@ -1,6 +1,7 @@
 //------------------------------------------------------------------------------
 #define   IWM_COPYRIGHT       "(C)2024 iwm-iwama"
-#define   IWM_VERSION         "iwmFileDialog+FLTK_202405018"
+#define   IWM_FILENAME        "iwmFileDialog+FLTK"
+#define   IWM_UPDATE          "20240621"
 //------------------------------------------------------------------------------
 extern "C"
 {
@@ -9,9 +10,15 @@ extern "C"
 #include <FL/Fl_Native_File_Chooser.H>
 
 INT       main();
-VOID      subFLTK(UINT uType, CONST WS *wpDir, UINT uCP);
+VOID      subFLTK(CONST MS *mpTitle, UINT uType, CONST MS *mpDir, UINT uCP);
 VOID      print_version();
 VOID      print_help();
+
+#define   TITLE_BROWSE_FILE             "ファイル選択（単一）"
+#define   TITLE_BROWSE_MULTI_FILE       "ファイル選択（複数）"
+#define   TITLE_BROWSE_DIRECTORY        "フォルダ選択（単一）"
+#define   TITLE_BROWSE_SAVE_FILE        "ファイルを指定"
+#define   TITLE_BROWSE_SAVE_DIRECTORY   "フォルダを指定"
 
 INT
 main()
@@ -37,8 +44,9 @@ main()
 
 	// 初期化
 	BOOL GblOptFlg = FALSE;
-	INT GblType = Fl_Native_File_Chooser::BROWSE_MULTI_FILE;
-	WS  GblInitialDir[MAX_PATH] = L".";
+	MS *GblTitle = 0;
+	INT GblType = 0;
+	MS *GblDir = 0;
 	INT GblCodepage = 65001;
 
 	for(UINT _u1 = 0; _u1 < $ARGC ; _u1++)
@@ -59,27 +67,32 @@ main()
 			// BROWSE_FILE
 			if(iwb_cmpp(_wp1, L"f"))
 			{
+				GblTitle = ims_clone(TITLE_BROWSE_FILE);
 				GblType = Fl_Native_File_Chooser::BROWSE_FILE;
-			}
-			// BROWSE_MULTI_FILE
-			else if(iwb_cmpp(_wp1, L"mf"))
-			{
-				GblType = Fl_Native_File_Chooser::BROWSE_MULTI_FILE;
 			}
 			// BROWSE_DIRECTORY
 			else if(iwb_cmpp(_wp1, L"d"))
 			{
+				GblTitle = ims_clone(TITLE_BROWSE_DIRECTORY);
 				GblType = Fl_Native_File_Chooser::BROWSE_DIRECTORY;
 			}
 			// BROWSE_SAVE_FILE
 			else if(iwb_cmpp(_wp1, L"sf"))
 			{
+				GblTitle = ims_clone(TITLE_BROWSE_SAVE_FILE);
 				GblType = Fl_Native_File_Chooser::BROWSE_SAVE_FILE;
 			}
 			// BROWSE_SAVE_DIRECTORY
 			else if(iwb_cmpp(_wp1, L"sd"))
 			{
+				GblTitle = ims_clone(TITLE_BROWSE_SAVE_DIRECTORY);
 				GblType = Fl_Native_File_Chooser::BROWSE_SAVE_DIRECTORY;
+			}
+			// BROWSE_MULTI_FILE
+			else
+			{
+				GblTitle = ims_clone(TITLE_BROWSE_MULTI_FILE);
+				GblType = Fl_Native_File_Chooser::BROWSE_MULTI_FILE;
 			}
 
 			ifree(_wp1);
@@ -92,11 +105,12 @@ main()
 			if(iFchk_DirName(_wp1))
 			{
 				GblOptFlg = TRUE;
-				wcscpy(GblInitialDir, _wp1);
+				GblDir = W2M(_wp1);
 			}
 			else
 			{
 				GblOptFlg = FALSE;
+				GblDir = ims_clone(".");
 			}
 
 			ifree(_wp1);
@@ -112,7 +126,7 @@ main()
 
 	if(GblOptFlg)
 	{
-		subFLTK(GblType, GblInitialDir, GblCodepage);
+		subFLTK(GblTitle, GblType, GblDir, GblCodepage);
 	}
 	else
 	{
@@ -129,61 +143,60 @@ main()
 }
 
 VOID subFLTK(
+	CONST MS *mpTitle,
 	UINT uType,
-	CONST WS *wpDir,
+	CONST MS *mpDir,
 	UINT uCP
 )
 {
-	MS *mpDir = W2M(wpDir);
-		Fl_Native_File_Chooser fnfc;
-		fnfc.title("");
-		fnfc.type(uType);
-		fnfc.directory(mpDir);
-		fnfc.filter(
-			"All Files\t*.*"
-			///"\n"
-			///"Image\t*{.png,*.jpg,*.jpeg}"
-		);
+	Fl_Native_File_Chooser fnfc;
+	fnfc.title(mpTitle);
+	fnfc.type(uType);
+	fnfc.directory(mpDir);
+	fnfc.filter(
+		"All Files\t*.*"
+		///"\n"
+		///"Image\t*{.png,*.jpg,*.jpeg}"
+	);
 
-		switch(fnfc.show())
-		{
-			case -1:
-			case  1:
-				P1("");
-				break;
+	switch(fnfc.show())
+	{
+		case -1:
+		case  1:
+			P1("");
+			break;
 
-			default:
-				$struct_iVBM *IVBM = iVBM_alloc();
-					for(int _i1 = 0; _i1 < fnfc.count(); _i1++)
+		default:
+			$struct_iVBM *IVBM = iVBM_alloc();
+				for(int _i1 = 0; _i1 < fnfc.count(); _i1++)
+				{
+					iVBM_add(IVBM, fnfc.filename(_i1));
+					// Dirのとき
+					if(uType == Fl_Native_File_Chooser::BROWSE_DIRECTORY || uType == Fl_Native_File_Chooser::BROWSE_SAVE_DIRECTORY)
 					{
-						iVBM_add(IVBM, fnfc.filename(_i1));
-						// Dirのとき
-						if(uType == Fl_Native_File_Chooser::BROWSE_DIRECTORY || uType == Fl_Native_File_Chooser::BROWSE_SAVE_DIRECTORY)
+						// "c:" のとき "c:\" が返されるため
+						if(*(iVBM_getStr(IVBM) + iVBM_getLength(IVBM) - 1) != '\\')
 						{
-							// "c:" のとき "c:\" が返されるため
-							if(*(iVBM_getStr(IVBM) + iVBM_getLength(IVBM) - 1) != '\\')
-							{
-								iVBM_add(IVBM, "\\");
-							}
+							iVBM_add(IVBM, "\\");
 						}
-						iVBM_add(IVBM, "\n");
 					}
-					if(uCP == 65001)
-					{
-						QP(iVBM_getStr(IVBM), iVBM_getLength(IVBM));
-					}
-					else
-					{
-						WS *wp1 = M2W(iVBM_getStr(IVBM));
-							MS *mp1 = icnv_W2M(wp1, uCP);
-								QP1(mp1);
-							ifree(mp1);
-						ifree(wp1);
-					}
-				iVBM_free(IVBM);
-				break;
-		}
-	ifree(mpDir);
+					iVBM_add(IVBM, "\n");
+				}
+				if(uCP == 65001)
+				{
+					QP(iVBM_getStr(IVBM), iVBM_getLength(IVBM));
+				}
+				else
+				{
+					WS *wp1 = M2W(iVBM_getStr(IVBM));
+						MS *mp1 = icnv_W2M(wp1, uCP);
+							QP1(mp1);
+						ifree(mp1);
+					ifree(wp1);
+				}
+			iVBM_free(IVBM);
+			break;
+	}
 }
 
 VOID
@@ -191,13 +204,9 @@ print_version()
 {
 	P1(IESC_STR2);
 	LN(80);
-	P(
-		" %s\n"
-		"    %s+%s\n"
-		,
-		IWM_COPYRIGHT,
-		IWM_VERSION,
-		LIB_IWMUTIL_VERSION
+	P1(
+		" " IWM_COPYRIGHT "\n"
+		"    " IWM_FILENAME "_" IWM_UPDATE " + " LIB_IWMUTIL_FILENAME "\n"
 	);
 	LN(80);
 	P1(IESC_RESET);
@@ -206,33 +215,31 @@ print_version()
 VOID
 print_help()
 {
-	CONST MS *_cmd = "iwmFileDialog+FLTK.exe";
-
 	print_version();
-	P(
-		IESC_TITLE1	" フォルダ／ファイル選択ダイアログ "	IESC_RESET	"\n\n"
-		IESC_STR1	"    %s"
+	P1(
+		IESC_TITLE1	" フォルダ／ファイル選択ダイアログ " IESC_RESET "\n\n"
+		IESC_STR1	"    " IWM_FILENAME
 		IESC_OPT2	" [Option]\n\n\n"
 		IESC_LBL1	" (例１) オプション指定\n"
-		IESC_STR1	"    %s"
+		IESC_STR1	"    " IWM_FILENAME
 		IESC_OPT2	" -type=f -dir=\"c:\\windows\" -cp=932\n\n"
 		IESC_LBL1	" (例２) オプション初期値で実行\n"
-		IESC_STR1	"    %s"
+		IESC_STR1	"    " IWM_FILENAME
 		IESC_OPT2	" -x\n\n\n"
-		,
-		_cmd,
-		_cmd,
-		_cmd
 	);
 	P1(
 		IESC_OPT2	" [Option]\n"
 		IESC_OPT21	"    -type=STR\n"
-		IESC_STR1	"        ダイアログ種（初期値：mf）\n"
-		IESC_STR2	"            f  = ファイル選択(単一)\n"
-					"            mf = ファイル選択(複数)\n"
-					"            d  = フォルダ選択\n"
-					"            sf = 保存先ファイル選択\n"
-					"            sd = 保存先フォルダ選択\n\n"
+		IESC_STR1	"        ダイアログ（初期値：mf）\n"
+	);
+	P1(
+		IESC_STR2	"            f  = " TITLE_BROWSE_FILE "\n"
+					"            mf = " TITLE_BROWSE_MULTI_FILE "\n"
+					"            d  = " TITLE_BROWSE_DIRECTORY "\n"
+					"            sf = " TITLE_BROWSE_SAVE_FILE "\n"
+					"            sd = " TITLE_BROWSE_SAVE_DIRECTORY "\n\n"
+	);
+	P1(
 		IESC_OPT21	"    -dir=STR\n"
 		IESC_STR1	"        初期フォルダ指定（初期値：\".\"）\n\n"
 		IESC_OPT21	"    -cp=NUM\n"

@@ -6,7 +6,7 @@ LN = "-" * 80
 
 def SubDialog()
 	while true
-		s1 = %x(#{CMD} -type=mf -cp=65001)
+		s1 = %x(#{CMD} -t=mf -cp=65001)
 		break if s1.length == 0
 		print s1
 	end

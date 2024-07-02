@@ -8,7 +8,12 @@ LN = "-" * 80
 
 def SubDialog():
 	while(True):
-		child = subprocess.Popen(CMD + " -type=mf -cp=65001", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		child = subprocess.Popen(
+			CMD + " -t=mf -cp=65001",
+			shell=True,
+			stdout=subprocess.PIPE,
+			stderr=subprocess.PIPE
+		)
 		stdout, stderr = child.communicate()
 		if(len(stdout) == 0):
 			break

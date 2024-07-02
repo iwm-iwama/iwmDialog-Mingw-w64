@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 #define   IWM_COPYRIGHT       "(C)2024 iwm-iwama"
 #define   IWM_FILENAME        "iwmFileDialog+FLTK"
-#define   IWM_UPDATE          "20240621"
+#define   IWM_UPDATE          "20240702"
 //------------------------------------------------------------------------------
 extern "C"
 {
@@ -53,14 +53,8 @@ main()
 	{
 		WS *_wp1 = 0;
 
-		// -x
-		if(_u1 == 0 && iCLI_getOptMatch(0, L"-x", NULL))
-		{
-			GblOptFlg = TRUE;
-			break;
-		}
 		// -type=STR
-		else if((_wp1 = iCLI_getOptValue(_u1, L"-type=", NULL)))
+		if((_wp1 = iCLI_getOptValue(_u1, L"-t=", L"-type=")))
 		{
 			GblOptFlg = TRUE;
 
@@ -98,7 +92,7 @@ main()
 			ifree(_wp1);
 		}
 		// -dir=STR
-		else if((_wp1 = iCLI_getOptValue(_u1, L"-dir=", NULL)))
+		else if((_wp1 = iCLI_getOptValue(_u1, L"-d=", L"-dir=")))
 		{
 			GblOptFlg = TRUE;
 
@@ -116,7 +110,7 @@ main()
 			ifree(_wp1);
 		}
 		// -cp=NUM
-		else if((_wp1 = iCLI_getOptValue(_u1, L"-cp=", NULL)))
+		else if((_wp1 = iCLI_getOptValue(_u1, L"-cp=", L"-codepage=")))
 		{
 			GblOptFlg = TRUE;
 			GblCodepage = _wtoi(_wp1);
@@ -205,8 +199,8 @@ print_version()
 	P1(IESC_STR2);
 	LN(80);
 	P1(
-		" " IWM_COPYRIGHT "\n"
-		"    " IWM_FILENAME "_" IWM_UPDATE " + " LIB_IWMUTIL_FILENAME "\n"
+		"\033[2G" IWM_COPYRIGHT "\n"
+		"\033[5G" IWM_FILENAME "_" IWM_UPDATE " + " LIB_IWMUTIL_FILENAME "\n"
 	);
 	LN(80);
 	P1(IESC_RESET);
@@ -217,35 +211,32 @@ print_help()
 {
 	print_version();
 	P1(
-		IESC_TITLE1	" フォルダ／ファイル選択ダイアログ " IESC_RESET "\n\n"
-		IESC_STR1	"    " IWM_FILENAME
-		IESC_OPT2	" [Option]\n\n\n"
-		IESC_LBL1	" (例１) オプション指定\n"
-		IESC_STR1	"    " IWM_FILENAME
-		IESC_OPT2	" -type=f -dir=\"c:\\windows\" -cp=932\n\n"
-		IESC_LBL1	" (例２) オプション初期値で実行\n"
-		IESC_STR1	"    " IWM_FILENAME
-		IESC_OPT2	" -x\n\n\n"
-	);
-	P1(
-		IESC_OPT2	" [Option]\n"
-		IESC_OPT21	"    -type=STR\n"
-		IESC_STR1	"        ダイアログ（初期値：mf）\n"
-	);
-	P1(
-		IESC_STR2	"            f  = " TITLE_BROWSE_FILE "\n"
-					"            mf = " TITLE_BROWSE_MULTI_FILE "\n"
-					"            d  = " TITLE_BROWSE_DIRECTORY "\n"
-					"            sf = " TITLE_BROWSE_SAVE_FILE "\n"
-					"            sd = " TITLE_BROWSE_SAVE_DIRECTORY "\n\n"
-	);
-	P1(
-		IESC_OPT21	"    -dir=STR\n"
-		IESC_STR1	"        初期フォルダ指定（初期値：\".\"）\n\n"
-		IESC_OPT21	"    -cp=NUM\n"
-		IESC_STR1	"        コードページ指定（初期値：65001）\n"
-		IESC_STR2	"            65001 = UTF-8\n"
-					"            932   = Shift_JIS\n\n"
+		"\033[1G"  IESC_TITLE1 " フォルダ／ファイル選択ダイアログ " IESC_RESET "\n"
+		"\n"
+		"\033[5G"  IESC_STR1 IWM_FILENAME IESC_OPT2 " [Option]" "\n"
+		"\n\n"
+		"\033[2G"  IESC_LBL1 "(例) オプション" "\n"
+		"\033[5G"  IESC_STR1 IWM_FILENAME IESC_OPT2 " -type=f -dir=\"c:\\windows\" -codepage=932" "\n"
+		"\n"
+		"\033[2G"  IESC_OPT2 "[Option]" "\n"
+		"\033[5G"  IESC_OPT21 "-type=STR | -t=STR" "\n"
+		"\033[9G"  IESC_STR1 "ダイアログ（初期値：mf）" "\n"
+		IESC_STR2
+		"\033[13G" "f  = " TITLE_BROWSE_FILE "\n"
+		"\033[13G" "mf = " TITLE_BROWSE_MULTI_FILE "\n"
+		"\033[13G" "d  = " TITLE_BROWSE_DIRECTORY "\n"
+		"\033[13G" "sf = " TITLE_BROWSE_SAVE_FILE "\n"
+		"\033[13G" "sd = " TITLE_BROWSE_SAVE_DIRECTORY "\n"
+		"\n"
+		"\033[5G"  IESC_OPT21 "-dir=STR | -d=STR" "\n"
+		"\033[9G"  IESC_STR1  "初期フォルダ指定（初期値：\".\"）" "\n"
+		"\n"
+		"\033[5G"  IESC_OPT21 "-codepage=NUM | -cp=NUM" "\n"
+		"\033[9G"  IESC_STR1  "コードページ指定（初期値：65001）" "\n"
+		IESC_STR2
+		"\033[13G" "65001 = UTF-8" "\n"
+		"\033[13G" "932   = Shift_JIS" "\n"
+		"\n"
 	);
 	P1(IESC_STR2);
 	LN(80);

@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 #define   IWM_COPYRIGHT       "(C)2024 iwm-iwama"
 #define   IWM_FILENAME        "iwmFileDialog+FLTK"
-#define   IWM_UPDATE          "20240702"
+#define   IWM_UPDATE          "20240814"
 //------------------------------------------------------------------------------
 extern "C"
 {

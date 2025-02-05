@@ -9,8 +9,7 @@ for /f "delims=. tokens=1,2" %%i in ("%src%") do (
 	set fn=%%i%
 )
 set fn_exe=%fn%.exe
-set cc=g++.exe
-:: -std=c++23
+set cc=g++.exe -std=c++23
 set lib=lib_iwmutil2.a
 :: -static 以降は `fltk-config --ldstaticflags` を展開したもの
 :: -Wl,-subsystem,console => With Console
@@ -27,7 +26,6 @@ set op_link=-Os -Wall -Wextra -lgdi32 -luser32 -lshlwapi -static -pipe -Wl,-subs
 :: Test
 	pause
 	%fn%.exe
-	for /f "usebackq delims=" %%s in (`"%fn_exe% -type=mf -cp=932"`) do echo %%s
 
 :: Quit
 	echo.

@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 #define   IWM_COPYRIGHT       "(C)2024-2025 iwm-iwama"
 #define   IWM_FILENAME        "iwmFileDialog+FLTK"
-#define   IWM_UPDATE          "20250204"
+#define   IWM_UPDATE          "20250326"
 //------------------------------------------------------------------------------
 extern "C"
 {
@@ -31,6 +31,7 @@ main()
 	// -h | --help
 	if(! $ARGC || iCLI_getOptMatch(0, L"-h", L"--help"))
 	{
+		subPrintVersion();
 		subPrintHelp();
 		Sleep(2000);
 		imain_end();
@@ -58,31 +59,31 @@ main()
 		if((_wp1 = iCLI_getOptValue(_u1, L"-t=", L"-type=")))
 		{
 			// BROWSE_DIRECTORY
-			if(iwb_cmpp(_wp1, L"d"))
+			if(! wcscmp(_wp1, L"d"))
 			{
 				GblTitle = ims_clone(TITLE_BROWSE_DIRECTORY);
 				GblType = Fl_Native_File_Chooser::BROWSE_DIRECTORY;
 			}
 			// BROWSE_SAVE_DIRECTORY
-			else if(iwb_cmpp(_wp1, L"D"))
+			else if(! wcscmp(_wp1, L"D"))
 			{
 				GblTitle = ims_clone(TITLE_BROWSE_SAVE_DIRECTORY);
 				GblType = Fl_Native_File_Chooser::BROWSE_SAVE_DIRECTORY;
 			}
 			// BROWSE_FILE
-			else if(iwb_cmpp(_wp1, L"f"))
+			else if(! wcscmp(_wp1, L"f"))
 			{
 				GblTitle = ims_clone(TITLE_BROWSE_FILE);
 				GblType = Fl_Native_File_Chooser::BROWSE_FILE;
 			}
 			// BROWSE_MULTI_FILE
-			else if(iwb_cmpp(_wp1, L"m"))
+			else if(! wcscmp(_wp1, L"m"))
 			{
 				GblTitle = ims_clone(TITLE_BROWSE_MULTI_FILE);
 				GblType = Fl_Native_File_Chooser::BROWSE_MULTI_FILE;
 			}
 			// BROWSE_SAVE_FILE
-			else if(iwb_cmpp(_wp1, L"F"))
+			else if(! wcscmp(_wp1, L"F"))
 			{
 				GblTitle = ims_clone(TITLE_BROWSE_SAVE_FILE);
 				GblType = Fl_Native_File_Chooser::BROWSE_SAVE_FILE;
@@ -112,10 +113,10 @@ main()
 		subPrintHelp();
 	}
 
-	// 処理時間
-	///P("-- %.3fsec\n\n", iExecSec_next());
-
-	///idebug_map(); ifree_all(); idebug_map();
+	// Debug
+	///idebug_map();
+	///ifree_all();
+	///idebug_map();
 
 	// 最終処理
 	imain_end();
@@ -147,32 +148,34 @@ subFLTK(
 			break;
 
 		default:
-			$struct_iVBM *IVBM = iVBM_alloc();
+			$struct_iVBM *iVBM = iVBM_alloc();
 				for(int _i1 = 0; _i1 < fnfc.count(); _i1++)
 				{
-					iVBM_add(IVBM, fnfc.filename(_i1));
+					iVBM_push2(iVBM, fnfc.filename(_i1));
 					// Dirのとき
 					if(uType == Fl_Native_File_Chooser::BROWSE_DIRECTORY || uType == Fl_Native_File_Chooser::BROWSE_SAVE_DIRECTORY)
 					{
 						// "c:" のとき "c:\" が返されるため
-						if(*(iVBM_getStr(IVBM) + iVBM_getLength(IVBM) - 1) != '\\')
+						if(*(iVBM_getStr(iVBM) + iVBM_getLength(iVBM) - 1) != '\\')
 						{
-							iVBM_add(IVBM, "\\");
+							iVBM_push(iVBM, "\\", 1);
 						}
 					}
-					iVBM_add(IVBM, "\n");
+					iVBM_push(iVBM, "\n", 1);
 				}
 				if(uCP == 932)
 				{
-					WS *wp1 = M2W(iVBM_getStr(IVBM));
-						MS *mp1 = icnv_W2M(wp1, uCP);
-							QP1(mp1);
+					WS *wp1 = M2W(iVBM_getStr(iVBM));
+					MS *mp1 = icnv_W2M(wp1, uCP);
+					ifree(wp1);
+						QP2(mp1);
+					ifree(mp1);
 				}
 				else
 				{
-					QP(iVBM_getStr(IVBM), iVBM_getLength(IVBM));
+					QP(iVBM_getStr(iVBM), iVBM_getLength(iVBM));
 				}
-			iVBM_free(IVBM);
+			iVBM_freeAll(iVBM);
 			break;
 	}
 }
@@ -193,7 +196,6 @@ subPrintVersion()
 VOID
 subPrintHelp()
 {
-	subPrintVersion();
 	P1(
 		"\033[1G"	IESC_TITLE1	" フォルダ／ファイル選択ダイアログ "	IESC_RESET	"\n"
 		"\n"

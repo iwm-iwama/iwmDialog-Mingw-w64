@@ -1,7 +1,7 @@
 @echo off
 cls
 
-set CMD=.\iwmFileDialog+FLTK.exe
+set CMD=.\iwmFileDialog+FLTK.exe cp=65001
 
 echo.
 

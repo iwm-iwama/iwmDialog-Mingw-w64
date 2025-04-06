@@ -15,7 +15,20 @@ set lib=lib_iwmutil2.a
 :: -Wl,-subsystem,console => With Console
 :: -Wl,-subsystem,windows => Without Console
 set subsystem=console
-set op_link=-Os -Wall -Wextra -lgdi32 -luser32 -lshlwapi -static -pipe -Wl,-subsystem,%subsystem% -mwindows -lfltk -lgdiplus -lole32 -luuid -lcomctl32 -lws2_32 -lwinspool
+set op_link=-Os -Wall -Wextra -Wformat=2 -lgdi32 -luser32 -lshlwapi -static -pipe -Wl,-subsystem,%subsystem% -mwindows -lfltk -lgdiplus -lole32 -luuid -lcomctl32 -lws2_32 -lwinspool
+
+:: Assembler
+	if exist "%fn%_old.s" (
+		rm "%fn%_old.s"
+	)
+	if exist "%fn%.s" (
+		mv "%fn%.s" "%fn%_old.s"
+	)
+::	for %%s in (%src%) do (
+::		%cc% %%s -S %op_link%
+::	)
+::	ls -la *.s
+::	echo.
 
 :: Make
 	echo --- Make ------------------------------------------

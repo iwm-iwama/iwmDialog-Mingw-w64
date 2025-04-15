@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 #define   IWM_COPYRIGHT       "(C)2024-2025 iwm-iwama"
 #define   IWM_FILENAME        "iwmFileDialog+FLTK"
-#define   IWM_UPDATE          "20250326"
+#define   IWM_UPDATE          "20250413"
 //------------------------------------------------------------------------------
 extern "C"
 {
@@ -92,7 +92,7 @@ main()
 		// -dir=STR
 		else if((_wp1 = iCLI_getOptValue(_u1, L"-d=", L"-dir=")))
 		{
-			if(iFchk_DirName(_wp1))
+			if(iF_chkDirName(_wp1))
 			{
 				GblDir = W2M(_wp1);
 			}

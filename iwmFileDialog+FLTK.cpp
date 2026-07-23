@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 #define IWM_COPYRIGHT "(C)2024-2026 iwm-iwama"
 #define IWM_FILENAME "iwmFileDialog+FLTK"
-#define IWM_UPDATE "20260618"
+#define IWM_UPDATE "20260717"
 //------------------------------------------------------------------------------
 extern "C"
 {
@@ -47,7 +47,7 @@ INT main()
 	MS *GblTitle = 0;
 	INT GblType = 0;
 	MS *GblDir = icalloc_MS(MAX_PATH);
-	GetCurrentDirectory(MAX_PATH, GblDir);
+	GetCurrentDirectoryA(MAX_PATH, GblDir);
 	INT GblCodepage = 65001;
 
 	for (UINT _u1 = 0; _u1 < $ARGC; _u1++)
@@ -112,9 +112,11 @@ INT main()
 		subPrintHelp();
 	}
 
+	// 掃除
+	ifree(GblTitle);
+	ifree(GblDir);
+
 	// Debug
-	/// idebug_map(NULL);
-	/// ifree_all();
 	/// idebug_map(NULL);
 
 	// 最終処理
@@ -172,7 +174,7 @@ VOID subFLTK(
 		{
 			QP(iVBM_getStr(iVBM), iVBM_getLength(iVBM));
 		}
-		iVBM_freeAll(iVBM);
+		iVBM_free2(iVBM);
 		break;
 	}
 }

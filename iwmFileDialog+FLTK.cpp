@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 #define IWM_COPYRIGHT "(C)2024-2026 iwm-iwama"
 #define IWM_FILENAME "iwmFileDialog+FLTK"
-#define IWM_UPDATE "20260717"
+#define IWM_UPDATE "20260814"
 //------------------------------------------------------------------------------
 extern "C"
 {
@@ -116,7 +116,6 @@ INT main()
 	ifree(GblTitle);
 	ifree(GblDir);
 
-	// Debug
 	/// idebug_map(NULL);
 
 	// 最終処理
@@ -133,50 +132,46 @@ VOID subFLTK(
 	fnfc.title(mpTitle);
 	fnfc.type(uType);
 	fnfc.directory(mpDir);
-	fnfc.filter(
-		"All Files\t*.*"
-		///"\n"
-		///"Image\t*{.png,*.jpg,*.jpeg}"
-	);
+	// 1.4で推奨される明確なフィルター形式
+	fnfc.filter("All Files (*.*)\t*.*");
 
-	switch (fnfc.show())
+	INT result = fnfc.show();
+
+	// キャンセル = 1／エラー = -1 のとき処理を中断
+	if (result != 0)
 	{
-	case -1:
-	case 1:
 		P1("");
-		break;
-
-	default:
-		$struct_iVBM *iVBM = iVBM_alloc();
-		for (int _i1 = 0; _i1 < fnfc.count(); _i1++)
-		{
-			iVBM_push2(iVBM, fnfc.filename(_i1));
-			// Dirのとき
-			if (uType == Fl_Native_File_Chooser::BROWSE_DIRECTORY || uType == Fl_Native_File_Chooser::BROWSE_SAVE_DIRECTORY)
-			{
-				// "c:" のとき "c:\" が返されるため
-				if (*(iVBM_getStr(iVBM) + iVBM_getLength(iVBM) - 1) != '\\')
-				{
-					iVBM_push(iVBM, "\\", 1);
-				}
-			}
-			iVBM_push(iVBM, "\n", 1);
-		}
-		if (uCP == 932)
-		{
-			WS *wp1 = M2W(iVBM_getStr(iVBM));
-			MS *mp1 = icnv_W2M(wp1, uCP);
-			ifree(wp1);
-			QP2(mp1);
-			ifree(mp1);
-		}
-		else
-		{
-			QP(iVBM_getStr(iVBM), iVBM_getLength(iVBM));
-		}
-		iVBM_free2(iVBM);
-		break;
+		return;
 	}
+
+	$struct_iVBM *iVBM = iVBM_alloc();
+	for (INT _i1 = 0; _i1 < fnfc.count(); _i1++)
+	{
+		iVBM_push2(iVBM, fnfc.filename(_i1));
+		// Dirのとき
+		if (uType == Fl_Native_File_Chooser::BROWSE_DIRECTORY || uType == Fl_Native_File_Chooser::BROWSE_SAVE_DIRECTORY)
+		{
+			// "c:" のとき "c:\" が返されるため
+			if (*(iVBM_getStr(iVBM) + iVBM_getLength(iVBM) - 1) != '\\')
+			{
+				iVBM_push(iVBM, "\\", 1);
+			}
+		}
+		iVBM_push(iVBM, "\n", 1);
+	}
+	if (uCP == 932)
+	{
+		WS *wp1 = icnv_M2W(iVBM_getStr(iVBM), 65001);
+		MS *mp1 = icnv_W2M(wp1, uCP);
+		ifree(wp1);
+		QP2(mp1);
+		ifree(mp1);
+	}
+	else
+	{
+		QP(iVBM_getStr(iVBM), iVBM_getLength(iVBM));
+	}
+	iVBM_free2(iVBM);
 }
 
 VOID subPrintVersion()
